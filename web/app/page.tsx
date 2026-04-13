@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import StepGuide from "@/components/StepGuide";
 import FeatureGrid from "@/components/FeatureGrid";
 import WorkflowSection from "@/components/WorkflowSection";
 import Footer from "@/components/Footer";
@@ -12,6 +13,17 @@ export default function LandingPage() {
       <Header />
       <main>
         <Hero />
+
+        {/* Three-step guide */}
+        <section className="py-4 px-6">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-2">
+              <p className="text-white/30 text-sm uppercase tracking-widest">使用流程</p>
+            </div>
+            <StepGuide animateOnScroll={true} />
+          </div>
+        </section>
+
         <FeatureGrid />
         <WorkflowSection />
 

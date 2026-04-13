@@ -13,6 +13,7 @@ from typing import Any
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 # Add project root to path so subtitle_tool is importable
@@ -180,8 +181,120 @@ def _burn_worker(job_id: str, burn_job_id: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# URL transcription request model
+# ---------------------------------------------------------------------------
+
+class TranscribeUrlRequest(BaseModel):
+    url: str
+    language: str = "zh"
+    format: str = "srt"
+    model: str = "large-v3-turbo"
+    beam_size: int = 5
+    convert_to_traditional: bool = True
+
+
+# ---------------------------------------------------------------------------
+# URL download + transcription worker
+# ---------------------------------------------------------------------------
+
+def _transcribe_url_worker(
+    job_id: str,
+    url: str,
+    model: str,
+    language: str | None,
+    fmt: str,
+    beam_size: int,
+    convert_to_traditional: bool,
+) -> None:
+    """Download URL with yt-dlp, then run transcription pipeline."""
+    try:
+        import yt_dlp  # type: ignore
+
+        job_dir = UPLOAD_DIR / job_id
+        job_dir.mkdir(parents=True, exist_ok=True)
+        audio_path = job_dir / "input.%(ext)s"
+
+        update_job(
+            job_id,
+            status=JobStatus.loading_model,
+            message="正在下載影片...",
+            progress=0.05,
+        )
+
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": str(audio_path),
+            "quiet": True,
+            "no_warnings": True,
+            "postprocessors": [{
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }],
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        # Find the downloaded file
+        downloaded = list(job_dir.glob("input.*"))
+        if not downloaded:
+            raise RuntimeError("yt-dlp 未下載到任何檔案")
+        file_path = downloaded[0]
+
+        # Store video_path for burn support
+        update_job(job_id, video_path=str(file_path))
+
+        # Now run normal transcription
+        _transcribe_worker(job_id, file_path, model, language, fmt, beam_size, convert_to_traditional)
+
+    except Exception as exc:
+        update_job(
+            job_id,
+            status=JobStatus.error,
+            message="網址轉錄失敗",
+            progress=0.0,
+            error=str(exc),
+        )
+
+
+# ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+@app.post("/api/transcribe-url", response_model=JobResponse, status_code=202)
+async def transcribe_url(req: TranscribeUrlRequest) -> JobResponse:
+    """Accept a video URL, download with yt-dlp, and start transcription."""
+    if not req.url.startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+
+    job_id = str(uuid.uuid4())
+    lang = None if req.language in ("auto", "") else req.language
+
+    JOBS[job_id] = {
+        "job_id": job_id,
+        "status": JobStatus.pending,
+        "message": "等待處理...",
+        "progress": 0.0,
+        "error": None,
+        "result": None,
+        "video_path": None,
+        "format": req.format,
+    }
+
+    thread = threading.Thread(
+        target=_transcribe_url_worker,
+        args=(job_id, req.url, req.model, lang, req.format, req.beam_size, req.convert_to_traditional),
+        daemon=True,
+    )
+    thread.start()
+
+    return JobResponse(
+        job_id=job_id,
+        status=JobStatus.pending,
+        message="任務已建立，開始下載...",
+    )
+
 
 @app.post("/api/transcribe", response_model=JobResponse, status_code=202)
 async def transcribe(
