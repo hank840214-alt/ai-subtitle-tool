@@ -1,54 +1,154 @@
 # AI Subtitle Tool
 
-AI 驅動的字幕生成工具，專為**繁體中文**最高精準度設計。
+> AI-powered subtitle generator optimized for **Traditional Chinese** accuracy.
 
-## 特色
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://python.org)
+[![Model](https://img.shields.io/badge/Model-BELLE--whisper-purple.svg)](https://huggingface.co/BELLE-2/Belle-whisper-large-v3-zh-punct)
 
-- 🎯 **繁體中文最準確** — BELLE-whisper (比原版 Whisper 好 24-65%) + opencc s2twp 台灣用詞
-- 🎬 **長影片支援** — VAD 自動切段，無長度限制
-- 📦 **多格式輸出** — SRT / VTT / ASS / TXT
-- 🔥 **字幕燒錄** — 直接輸出帶字幕的 MP4
-- 📂 **批量處理** — 整個資料夾一次搞定
-- 🔒 **完全離線** — 100% 本地運行，隱私優先
+---
 
-## 安裝
+## Features
+
+| | |
+|---|---|
+| 🎯 **Best zh-TW accuracy** | BELLE-whisper fine-tuned model + OpenCC s2twp (Taiwan vocabulary) |
+| 🎬 **Unlimited length** | VAD-based automatic segmentation |
+| 📦 **Multiple formats** | SRT / VTT / ASS / TXT |
+| 🔥 **Subtitle burn-in** | Export MP4 with hardcoded subtitles via FFmpeg |
+| 📂 **Batch processing** | Process entire folders at once |
+| 🔒 **100% offline** | All computation local — no API keys, no cloud uploads |
+| 🌐 **Web UI** | Drag-and-drop interface with real-time progress |
+| 🔗 **URL upload** | Paste any YouTube / video URL to transcribe directly |
+
+---
+
+## Quick Start
+
+### Option A — Docker (recommended)
 
 ```bash
+git clone https://github.com/your-username/ai-subtitle-tool
 cd ai-subtitle-tool
-uv venv .venv --python 3.12
-source .venv/bin/activate
-uv pip install -e .
+docker compose up
 ```
 
-## 使用
+Open **http://localhost:3000** — done. Whisper models download on first use and are cached in a Docker volume.
+
+### Option B — Local launcher
+
+**macOS / Linux:**
+```bash
+git clone https://github.com/your-username/ai-subtitle-tool
+cd ai-subtitle-tool
+./scripts/start.sh
+```
+
+**Windows:**
+```bat
+scripts\start.bat
+```
+
+Or double-click **`scripts/AI Subtitle Tool.command`** on macOS (requires allowing in System Settings → Privacy).
+
+### Option C — CLI only
 
 ```bash
-# 基本轉錄
+git clone https://github.com/your-username/ai-subtitle-tool
+cd ai-subtitle-tool
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
+subtitle transcribe video.mp4
+```
+
+---
+
+## CLI Usage
+
+```bash
+# Basic transcription (outputs video.srt)
 subtitle transcribe video.mp4
 
-# 指定格式和語言
+# Choose format and language
 subtitle transcribe video.mp4 -f ass -l auto
 
-# 批量處理
+# Batch process a folder
 subtitle batch ./videos/
 
-# 燒錄字幕到影片
+# Burn subtitles into video
 subtitle burn video.mp4 video.srt
 ```
 
-## 技術架構
+---
+
+## Web UI
+
+Start with `./scripts/start.sh` or Docker, then open http://localhost:3000.
+
+- Drag-and-drop video / audio files
+- Paste a YouTube or video URL
+- Choose output format and model
+- Real-time transcription progress
+- Download subtitle file or burn to MP4
+
+---
+
+## Architecture
 
 ```
-影片/音訊 → FFmpeg 解碼 → faster-whisper (BELLE model) → opencc s2twp → SRT/VTT/ASS
-                                    ↑                         ↑
-                              VAD 長影片切段            簡→繁(台灣用詞)
+Video/Audio
+    │
+    ▼
+FFmpeg decode
+    │
+    ▼
+faster-whisper          ← BELLE-whisper-large-v3-zh-punct (default)
+(VAD chunking)          ← large-v3-turbo (fast fallback)
+    │
+    ▼
+OpenCC s2twp            ← Simplified → Traditional Chinese (Taiwan vocab)
+    │
+    ▼
+SRT / VTT / ASS / TXT
 ```
+
+**API server:** FastAPI + uvicorn (port 8000)  
+**Web frontend:** Next.js 16 (port 3000)  
+**Job management:** In-memory store with SSE progress streaming
+
+---
+
+## Development
+
+```bash
+# Backend (Python 3.12)
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[web]"
+uvicorn api.main:app --reload
+
+# Frontend
+cd web && npm install && npm run dev
+```
+
+---
+
+## Why BELLE-whisper?
+
+Standard Whisper outputs Simplified Chinese and often mixes in English for proper nouns. BELLE-whisper is fine-tuned on Mandarin speech with punctuation, producing cleaner Simplified Chinese that OpenCC then converts to Taiwan Traditional Chinese vocabulary (s2twp) — outperforming Whisper large-v3 by 24–65% on zh benchmarks.
+
+---
 
 ## Roadmap
 
-- [x] Phase 1: CLI 工具
-- [ ] Phase 2: Web UI (FastAPI + React)
-- [ ] Phase 3: Desktop App (Electron/Tauri)
+- [x] Phase 1: CLI tool
+- [x] Phase 2: Web UI (FastAPI + Next.js)
+- [x] Phase 2.5: Waveform editor, URL upload, 3-step guide
+- [x] Phase 3: Docker deployment + cross-platform launcher
+- [ ] Real-world zh-TW accuracy benchmarks
+- [ ] GPU acceleration guide (CUDA / Metal)
+- [ ] macOS native app (Tauri)
+
+---
 
 ## License
 

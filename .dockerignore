@@ -1,0 +1,15 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+web/node_modules
+web/.next
+*.wav
+*.mp4
+*.mp3
+*.srt
+*.vtt
+*.ass
+test_*

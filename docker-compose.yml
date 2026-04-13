@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist downloaded Whisper models across restarts
+      - huggingface_cache:/root/.cache/huggingface
+      # Persist job uploads/outputs
+      - subtitle_jobs:/tmp/subtitle_jobs
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "3000:3000"
+    environment:
+      # Points Next.js server-side rewrites to the API container
+      - API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  huggingface_cache:
+  subtitle_jobs:
