@@ -1,7 +1,7 @@
 [project]
 name = "ai-subtitle-tool"
-version = "0.1.0"
-description = "AI-powered subtitle generator with best Traditional Chinese accuracy"
+version = "2.0.0"
+description = "AI-powered real-time transcription platform with Traditional Chinese accuracy"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
