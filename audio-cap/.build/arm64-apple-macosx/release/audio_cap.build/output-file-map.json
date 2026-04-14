@@ -1,0 +1,13 @@
+{
+  "": {
+    "dependencies": "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/audio_cap.d",
+    "object": "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/audio_cap.o",
+    "swift-dependencies": "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/primary.swiftdeps"
+  },
+  "/Users/hank/ai-subtitle-tool/audio-cap/Sources/main.swift": {
+    "object": "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main.swift.o",
+    "swiftmodule": "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main.swiftdeps",
+    "diagnostics": "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main.dia"
+  }
+}

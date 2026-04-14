@@ -1,0 +1,66 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "PackageStructure": ["<PackageStructure>"]
+  "audio-cap-arm64-apple-macosx-release.exe": ["<audio-cap-arm64-apple-macosx-release.exe>"]
+  "audio-cap-arm64-apple-macosx-release.module": ["<audio-cap-arm64-apple-macosx-release.module>"]
+  "main": ["<audio-cap-arm64-apple-macosx-release.exe>","<audio-cap-arm64-apple-macosx-release.module>"]
+  "test": ["<audio-cap-arm64-apple-macosx-release.exe>","<audio-cap-arm64-apple-macosx-release.module>"]
+default: "main"
+nodes:
+  "/Users/hank/ai-subtitle-tool/audio-cap/Sources/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main.swift.o"]
+    outputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap.product/Objects.LinkFileList"
+
+  "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/hank/ai-subtitle-tool/audio-cap/Sources/main.swift"]
+    outputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/sources"]
+    description: "Write auxiliary file /Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/sources"
+
+  "/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"]
+    outputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+
+  "<audio-cap-arm64-apple-macosx-release.exe>":
+    tool: phony
+    inputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap"]
+    outputs: ["<audio-cap-arm64-apple-macosx-release.exe>"]
+
+  "<audio-cap-arm64-apple-macosx-release.module>":
+    tool: phony
+    inputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main.swift.o","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/Modules/audio_cap.swiftmodule"]
+    outputs: ["<audio-cap-arm64-apple-macosx-release.module>"]
+
+  "C.audio-cap-arm64-apple-macosx-release.exe":
+    tool: shell
+    inputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main.swift.o","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap.product/Objects.LinkFileList"]
+    outputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap"]
+    description: "Linking ./.build/arm64-apple-macosx/release/audio-cap"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-L","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release","-o","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap","-module-name","audio_cap","-Xlinker","-no_warn_duplicate_libraries","-emit-executable","-Xlinker","-dead_strip","-Xlinker","-alias","-Xlinker","_audio_cap_main","-Xlinker","_main","-Xlinker","-rpath","-Xlinker","@loader_path","@/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio-cap.product/Objects.LinkFileList","-Xlinker","-rpath","-Xlinker","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx","-target","arm64-apple-macosx14.0","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g"]
+
+  "C.audio-cap-arm64-apple-macosx-release.module":
+    tool: shell
+    inputs: ["/Users/hank/ai-subtitle-tool/audio-cap/Sources/main.swift","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/sources"]
+    outputs: ["/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/main.swift.o","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/Modules/audio_cap.swiftmodule"]
+    description: "Compiling Swift Module 'audio_cap' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","audio_cap","-emit-dependencies","-emit-module","-emit-module-path","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/Modules/audio_cap.swiftmodule","-output-file-map","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/output-file-map.json","-whole-module-optimization","-num-threads","10","-c","@/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/audio_cap.build/sources","-I","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/Modules","-target","arm64-apple-macosx14.0","-whole-module-optimization","-num-threads","10","-serialize-diagnostics","-O","-j10","-DSWIFT_PACKAGE","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/hank/ai-subtitle-tool/audio-cap/.build/arm64-apple-macosx/release/ModuleCache","-parseable-output","-Xfrontend","-entry-point-function-name","-Xfrontend","audio_cap_main","-parse-as-library","-swift-version","5","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","audio_cap"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/hank/ai-subtitle-tool/audio-cap/Sources/","/Users/hank/ai-subtitle-tool/audio-cap/Package.swift","/Users/hank/ai-subtitle-tool/audio-cap/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+
