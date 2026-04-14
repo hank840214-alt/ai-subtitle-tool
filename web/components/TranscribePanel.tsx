@@ -6,8 +6,9 @@ import UploadZone from "./UploadZone";
 import SubtitlePreview from "./SubtitlePreview";
 import WaveformEditor, { Segment } from "./WaveformEditor";
 import StepGuide from "./StepGuide";
+import SummaryChat from "./SummaryChat";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "";
 
 type JobStatus = "pending" | "loading_model" | "transcribing" | "burning" | "done" | "error";
 
@@ -110,12 +111,14 @@ export default function TranscribePanel() {
     return () => esRef.current?.close();
   }, []);
 
-  const openSseStream = (id: string) => {
+  const openSseStream = (id: string, retries = 0) => {
     esRef.current?.close();
     const es = new EventSource(`${API_BASE}/api/status/${id}`);
     esRef.current = es;
+    let receivedMessage = false;
 
     es.onmessage = async (e) => {
+      receivedMessage = true;
       const event: JobEvent = JSON.parse(e.data);
       setJobEvent(event);
 
@@ -136,6 +139,11 @@ export default function TranscribePanel() {
 
     es.onerror = () => {
       es.close();
+      // Retry up to 3 times if we never received a message (race condition)
+      if (!receivedMessage && retries < 3) {
+        setTimeout(() => openSseStream(id, retries + 1), 500);
+        return;
+      }
       setJobEvent((prev) =>
         prev?.status === "done" || prev?.status === "error"
           ? prev
@@ -182,8 +190,9 @@ export default function TranscribePanel() {
     }
   };
 
-  const startUrlTranscription = async () => {
-    if (!sourceUrl) return;
+  const startUrlTranscription = async (urlOverride?: string) => {
+    const url = urlOverride || sourceUrl;
+    if (!url) return;
     setIsSubmitting(true);
     setJobEvent(null);
     setSubtitleContent(null);
@@ -195,7 +204,7 @@ export default function TranscribePanel() {
       const res = await fetch(`${API_BASE}/api/transcribe-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: sourceUrl, language, format }),
+        body: JSON.stringify({ url, language, format }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -224,6 +233,7 @@ export default function TranscribePanel() {
   const handleUrl = (url: string) => {
     setSourceUrl(url);
     setFile(null);
+    startUrlTranscription(url);
   };
 
   const handleBurn = async () => {
@@ -452,7 +462,7 @@ export default function TranscribePanel() {
       {/* Submit button */}
       {!isRunning && !isDone && (
         <button
-          onClick={file ? startTranscription : startUrlTranscription}
+          onClick={file ? startTranscription : () => startUrlTranscription()}
           disabled={(!file && !sourceUrl) || isSubmitting}
           className="w-full h-12 bg-white text-black font-semibold rounded-full hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
         >
@@ -592,6 +602,11 @@ export default function TranscribePanel() {
           )}
           {burnState?.status === "error" && (
             <p className="text-red-400 text-sm text-center">{burnState.message}</p>
+          )}
+
+          {/* Summary + Chat */}
+          {jobId && (
+            <SummaryChat jobId={jobId} />
           )}
         </div>
       )}
