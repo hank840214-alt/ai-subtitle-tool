@@ -139,6 +139,15 @@ def _transcribe_worker(
             },
         )
 
+        # Auto-build RAG index
+        try:
+            from subtitle_tool.rag import index_job
+            from subtitle_tool.engines.base import Segment as EngSegment
+            eng_segments = [EngSegment(s.start, s.end, s.text) for s in result.segments]
+            index_job(job_id, eng_segments)
+        except Exception:
+            pass  # RAG is optional
+
     except Exception as exc:
         update_job(
             job_id,
