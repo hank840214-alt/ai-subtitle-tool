@@ -45,6 +45,9 @@ app.add_middleware(
 from api.routes_llm import router as llm_router
 app.include_router(llm_router)
 
+from api.routes_settings import router as settings_router
+app.include_router(settings_router)
+
 # ---------------------------------------------------------------------------
 # In-memory job store
 # ---------------------------------------------------------------------------
