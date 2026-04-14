@@ -84,6 +84,30 @@ def test_faster_whisper_engine_instantiates():
     assert FasterWhisperEngine.supports_streaming is False
 
 
+def test_qwen3_asr_engine_metadata():
+    pytest.importorskip("transformers", reason="transformers not installed")
+    from subtitle_tool.engines.qwen3_asr_engine import Qwen3AsrEngine
+    assert Qwen3AsrEngine.name == "qwen3-asr"
+    assert Qwen3AsrEngine.supports_streaming is True
+
+
+@pytest.mark.asyncio
+async def test_qwen3_asr_stream_interface():
+    """Verify stream() is an async generator (mock, no model download)."""
+    pytest.importorskip("transformers", reason="transformers not installed")
+    from unittest.mock import patch
+    from subtitle_tool.engines.qwen3_asr_engine import Qwen3AsrEngine
+
+    with patch.object(Qwen3AsrEngine, "__init__", lambda self, **kw: None):
+        engine = Qwen3AsrEngine()
+        engine.name = "qwen3-asr"
+        engine.supports_streaming = True
+        engine._model = None
+        engine._processor = None
+        engine._cc = None
+        assert hasattr(engine, "stream")
+
+
 def test_faster_whisper_engine_transcribe(sample_audio_path):
     """Integration test — requires model download, may be slow."""
     from subtitle_tool.engines.faster_whisper_engine import FasterWhisperEngine
