@@ -115,3 +115,17 @@ def test_faster_whisper_engine_transcribe(sample_audio_path):
     result = engine.transcribe(str(sample_audio_path), language="zh")
     assert isinstance(result, TranscribeResult)
     assert result.language != ""
+
+
+def test_mlx_whisper_engine_metadata():
+    pytest.importorskip("mlx_whisper", reason="mlx-whisper not installed")
+    from subtitle_tool.engines.mlx_whisper_engine import MlxWhisperEngine
+    assert MlxWhisperEngine.name == "mlx-whisper"
+    assert MlxWhisperEngine.supports_streaming is False
+
+
+def test_create_default_registry():
+    from subtitle_tool.engines import create_default_registry
+    registry = create_default_registry()
+    engines = registry.list_engines()
+    assert "faster-whisper" in engines  # always available

@@ -6,7 +6,7 @@ from typing import Type
 
 from .base import AbstractEngine, Segment, TranscribeResult
 
-__all__ = ["EngineRegistry", "AbstractEngine", "Segment", "TranscribeResult"]
+__all__ = ["EngineRegistry", "AbstractEngine", "Segment", "TranscribeResult", "create_default_registry"]
 
 
 class EngineRegistry:
@@ -34,3 +34,28 @@ class EngineRegistry:
     def reset(self) -> None:
         """Clear cached instances (useful for testing / model switching)."""
         self._instances.clear()
+
+
+def create_default_registry() -> EngineRegistry:
+    """Create registry with all available engines."""
+    registry = EngineRegistry()
+
+    # Always available
+    from .faster_whisper_engine import FasterWhisperEngine
+    registry.register(FasterWhisperEngine)
+
+    # Optional: Qwen3-ASR
+    try:
+        from .qwen3_asr_engine import Qwen3AsrEngine
+        registry.register(Qwen3AsrEngine)
+    except ImportError:
+        pass
+
+    # Optional: MLX Whisper (Apple Silicon only)
+    try:
+        from .mlx_whisper_engine import MlxWhisperEngine
+        registry.register(MlxWhisperEngine)
+    except ImportError:
+        pass
+
+    return registry
