@@ -10,7 +10,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -26,6 +26,7 @@ from api.models import (
     ResultResponse,
     SubtitleFormat,
 )
+from api.ws_live import live_transcribe_ws
 
 app = FastAPI(
     title="AI Subtitle Tool API",
@@ -486,3 +487,29 @@ async def delete_job(job_id: str) -> dict[str, str]:
 @app.get("/api/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.websocket("/ws/live-transcribe")
+async def ws_live(websocket: WebSocket):
+    await live_transcribe_ws(websocket)
+
+
+@app.get("/api/capabilities")
+async def get_capabilities():
+    from subtitle_tool.engines import create_default_registry
+    from subtitle_tool.audio_cap import is_audio_cap_available
+
+    registry = create_default_registry()
+    engines = []
+    for name in registry.list_engines():
+        cls = registry._engines[name]
+        engines.append({
+            "name": name,
+            "streaming": cls.supports_streaming,
+        })
+
+    return {
+        "engines": engines,
+        "audio_cap_available": is_audio_cap_available(),
+        "llm_available": True,
+    }

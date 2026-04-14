@@ -58,3 +58,30 @@ class ProgressEvent(BaseModel):
     message: str
     progress: float = 0.0
     data: dict[str, Any] | None = None
+
+
+class LiveAction(str, Enum):
+    start = "start"
+    pause = "pause"
+    stop = "stop"
+
+
+class LiveControlMessage(BaseModel):
+    action: LiveAction
+    engine: str = "qwen3-asr"
+    language: str = "zh"
+
+
+class LiveSegmentEvent(BaseModel):
+    type: str  # "partial" | "final" | "status" | "error"
+    text: str | None = None
+    segment: dict[str, Any] | None = None
+    sources: list[str] | None = None
+    engine: str | None = None
+    message: str | None = None
+
+
+class CapabilitiesResponse(BaseModel):
+    engines: list[dict[str, Any]]
+    audio_cap_available: bool
+    llm_available: bool
