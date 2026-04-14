@@ -75,3 +75,19 @@ def test_registry_list_streaming():
     streaming = registry.list_engines(streaming_only=True)
     assert "streamer" in streaming
     assert "batch-only" not in streaming
+
+
+def test_faster_whisper_engine_instantiates():
+    """FasterWhisperEngine should be importable and have correct metadata."""
+    from subtitle_tool.engines.faster_whisper_engine import FasterWhisperEngine
+    assert FasterWhisperEngine.name == "faster-whisper"
+    assert FasterWhisperEngine.supports_streaming is False
+
+
+def test_faster_whisper_engine_transcribe(sample_audio_path):
+    """Integration test — requires model download, may be slow."""
+    from subtitle_tool.engines.faster_whisper_engine import FasterWhisperEngine
+    engine = FasterWhisperEngine(model_id="tiny", device="cpu", compute_type="int8")
+    result = engine.transcribe(str(sample_audio_path), language="zh")
+    assert isinstance(result, TranscribeResult)
+    assert result.language != ""
