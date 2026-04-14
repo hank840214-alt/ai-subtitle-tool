@@ -494,6 +494,30 @@ async def ws_live(websocket: WebSocket):
     await live_transcribe_ws(websocket)
 
 
+# Global audio-cap process
+_audio_cap: "AudioCapProcess | None" = None
+
+@app.post("/api/audio-cap/start")
+async def start_audio_cap():
+    from subtitle_tool.audio_cap import is_audio_cap_available, AudioCapProcess
+    global _audio_cap
+    if not is_audio_cap_available():
+        raise HTTPException(status_code=404, detail="audio-cap not available")
+    if _audio_cap and _audio_cap.is_running:
+        return {"status": "already_running"}
+    _audio_cap = AudioCapProcess()
+    await _audio_cap.start()
+    return {"status": "started"}
+
+@app.post("/api/audio-cap/stop")
+async def stop_audio_cap():
+    global _audio_cap
+    if _audio_cap:
+        await _audio_cap.stop()
+        _audio_cap = None
+    return {"status": "stopped"}
+
+
 @app.get("/api/capabilities")
 async def get_capabilities():
     from subtitle_tool.engines import create_default_registry
