@@ -11,3 +11,5 @@ build/
 *.ass
 .planning/
 .omc/
+models/
+*.app/
